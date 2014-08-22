@@ -1,0 +1,177 @@
+README
+------------- 
+ By : Ankit Kumar
+ ---------------
+ **How To Run run_analysis.R**
+ -----------
+
+There is a file called run_analysis.R  in the root directory of project. Running this file output the resulting dataset.   Use this file to get the analysis result.
+  
+
+ Step Wise Structure - run_analysis.R
+ ------------------------
+ **Step 1:**
+ This code section is responsible for the fetching all the observation from the training category data set and from the test category data set. After fetching from these dataset, and merging with related dataframes like activity,subject and features, it created two data frames one for training data set and second for test dataset. Finally we merge these two data set to get a single tidy data set which represents the observation for subject with activitya and number of calculated features of the expertiment. 
+ 
+the variable final_data_set holds the resulting data frame. You can use it to check the first step resulting data frame.
+
+
+````````````````````````````````````````````````````````````````````````````````
+
+# Step 1
+
+feature=read.table("./UCI_HAR_Dataset/features.txt")   # fetching features parameters
+
+train_x=read.table("./UCI_HAR_Dataset/train/X_train.txt") # fetching records corresponding to featrures
+activity_train = read.table("./UCI_HAR_Dataset/train/y_train.txt"); # Activity Associate With Parameters Values
+subject_train = read.table("./UCI_HAR_Dataset/train/subject_train.txt") # Subject Associated with Activity
+activity_labels = read.table("./UCI_HAR_Dataset/activity_labels.txt") # fetching activity lebels 
+
+# Setting proper column names to activity label dataframe
+
+colnames(activity_labels) <- c("id","activity_name")
+
+# Setting proper column names to subject data frame
+
+colnames(subject_train) <- c("subject_id")
+
+# Setting column names of train_x dataset by the values of features
+colnames(train_x) <- feature$V2
+
+# Appending column activity to the train_x dataset by the values fo activity table
+train_x$activity_id = activity_train$V1
+less_train_x = train_x #[,c(1,2)]  #just temporarry
+less_train_x$activity_id = activity_train$V1
+less_train_x=merge(less_train_x,activity_labels,by.x="activity_id",by.y="id",all = FALSE,)
+less_train_x$subject_id = subject_train$subject_id
+
+# Fetching dataset from test category observation 
+test_x=read.table("./UCI_HAR_Dataset/test/X_test.txt")
+
+# Activity Associate With Parameters Values
+activity_test = read.table("./UCI_HAR_Dataset/test/y_test.txt");
+
+# fetchin subject dataset for test 
+subject_test = read.table("./UCI_HAR_Dataset/test/subject_test.txt")
+
+# Setting proper column names to subject test dataframe
+colnames(subject_test) <- c("subject_id")
+
+colnames(test_x) <- feature$V2
+test_x$activity_id = activity_test$V1
+less_test_x = test_x #[,c(1,2)]  #just temporarry
+less_test_x$activity_id = activity_test$V1
+less_test_x=merge(less_test_x,activity_labels,by.x="activity_id",by.y="id",all = FALSE,)
+less_test_x$subject_id = subject_test$subject_id
+
+# Merges the training and the test sets to create one data set.
+
+final_data_set = rbind(less_train_x,less_test_x) #final Result Set..
+
+
+
+
+````````````````````````````````````````````````````````````````````````````````````````
+ 
+ **Step 2:**
+ 
+This Code Section is responsible for the extraction of means and standard deviation featurs observation for subject corresponding to activity from the datasets we get from the first section.
+
+The variable extract_data holds the dataframes with means and std column fields. You can use it to check the second step resulting data frame.
+
+````````````````````````````````````````````````````````````````````````````````
+#Step 2
+
+meancolname=grep("mean",feature$V2,value = TRUE)
+stdcolname=grep("std",feature$V2,value= TRUE)
+conam=union(meancolname,stdcolname)
+col = c("subject_id","activity_name",conam);
+extract_data = final_data_set[,col];
+
+````````````````````````````````````````````````````````````````````````````````
+
+**Step 3:**
+
+This Code Section is responsible for providing descriptive activity names to name the activities in the data set. The activity_name column of the dataframe is first converted to lowercase and then the underscore within the activity name is being replaced by a blank space using gsub() method. 
+
+variable extract_data holds the newly dataset with the descriptive column name. You can use it to check the desired outcomes of this step.
+
+`````````````````````````````````````````````````````````````````````````````````
+#Step 3
+
+extract_data$activity_name = gsub("_"," ",tolower(extract_data$activity_name))
+
+`````````````````````````````````````````````````````````````````````````````````
+**Step 4**
+
+This Code Section is responsible for providing descriptive lebels for dataset variables names. the names of columns is being converted to lowercase and the underscore has been used to replace space or - between words, parenthesis has been also removed from the column name. 
+
+variable extract_data contains dataframe with descriptive lebels. Use this variable to check the required outcome of this step.
+
+```````````````````````````````````````````````````````````````````````````````````
+#Step 4
+
+lower_colnames = tolower(col)
+lower_col = gsub("\\()","",lower_colnames)
+col_name_underscore = gsub("-","_",lower_col)
+colnames(extract_data) <- col_name_underscore
+
+```````````````````````````````````````````````````````````````````````````````````
+**Step 5:**
+
+This Code Section is responsible for creating a new data frame which shows average of each variable for each activity and each subject. the aggregriate() function is used to calculate the average of others variables for each subject with activity.
+
+variable answer represents the dataframe which have the desired results fo step5. Use this variable to check the required outcome.
+
+```````````````````````````````````````````````````````````````````````````````````
+#Step 5
+
+answer = aggregate(extract_data, list(extract_data$subject_id,extract_data$activity_name), mean)
+answer = answer[,c(1:2,5:83)]
+colnames(answer) <- col_name_underscore
+answer = answer[order(answer$subject_id,answer$activity_name),]
+
+write.table(answer,file="./result.txt",row.names = FALSE)
+
+# printing final answer
+print(answer)
+``````````````````````````````````````````````````````````````````````````````````
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+ 
+ Text attributes *italic*,
+ **bold**, `monospace`.
+ 
+ A [link](http://example.com).
+ <<<   No space between ] and (  >>>
+
+ Shopping list:
+ 
+   * apples
+   * oranges
+   * pears
+ 
+ Numbered list:
+ 
+   1. apples
+   2. oranges
+   3. pears
+ 
+ The rain---not the reign---in
+ Spain
